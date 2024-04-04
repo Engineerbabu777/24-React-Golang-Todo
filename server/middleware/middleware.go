@@ -2,11 +2,14 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"react-go-todo/models"
 
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -47,25 +50,92 @@ func createDbInit() {
 	fmt.Println("collection instance created!")
 }
 func GetAllTasks(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	payload := getAllTasks()
+
+	json.NewEncoder(w).Encode(payload)
 }
 
 func CreateTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/x.www.form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+	var Task models.TodoList
+
+	json.NewDecoder(r.Body).Decode(&Task)
+
+	insertOneTask(task)
+
+	json.NewEncoder(w).Encode(task)
 
 }
 
 func TaskComplete(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/x.www.form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
+	params := mux.Vars(r)
+
+	taskComplete(params["id"])
+	json.NewEncoder(w).Encode(params["id"])
 }
 
 func UndoTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/x.www.form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
+	params := mux.Vars(r)
+	UndoTask(params["id"])
+
+	json.NewEncoder(w).Encode(params["id"])
 }
 
 func DeleteTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/x.www.form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+
+	params := mux.Vars(r)
+
+	deleteOneTask(params["id"])
 
 }
 
 func DeleteAllTasks(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/x.www.form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+
+	count := deleteAllTasks()
+	json.NewEncoder(w).Encode(count)
+}
+
+func getAllTasks() {
+
+}
+
+func taskComplete(task string) {
+
+}
+
+func insertOneTask() {
+
+}
+
+func undoTask() {
+
+}
+
+func deleteOneTask() {
+
+}
+
+func deleteAllTasks() {
 
 }
