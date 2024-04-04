@@ -21,7 +21,7 @@ var collection *mongo.Collection
 
 func init() {
 	loadEnv()
-	creteDBInit()
+	createDbInit()
 }
 
 func loadEnv() {
@@ -36,7 +36,7 @@ func createDbInit() {
 	dbName := os.Getenv("DB_NAME")
 	collName := os.Getenv("DB_COLLECTION_NAME")
 
-	clientOptions := options.Client().ApplyURL(connectionString)
+	clientOptions := options.Client().ApplyURI(connectionString)
 
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 
@@ -70,9 +70,9 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	json.NewDecoder(r.Body).Decode(&Task)
 
-	insertOneTask(task)
+	insertOneTask(Task)
 
-	json.NewEncoder(w).Encode(task)
+	json.NewEncoder(w).Encode(Task)
 
 }
 
@@ -93,7 +93,7 @@ func UndoTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 	params := mux.Vars(r)
-	UndoTask(params["id"])
+	undoTask(params["id"])
 
 	json.NewEncoder(w).Encode(params["id"])
 }
@@ -160,18 +160,57 @@ func taskComplete(task string) {
 	fmt.Println("modified count: ", result.ModifiedCount)
 }
 
-func insertOneTask() {
+func insertOneTask(task models.TodoList) {
+
+	insertResult, err := collection.InsertOne(context.Background(), task)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Inserted: ", insertResult.InsertedID)
+}
+
+func undoTask(task string) {
+	id, _ := primitive.ObjectIDFromHex(task)
+
+	filter := bson.M{"id": id}
+	update := bson.M{"$set": bson.M{"status": false}}
+	result, err := collection.UpdateOne(context.Background(), filter, update)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("modified count: ", result.ModifiedCount)
 
 }
 
-func undoTask() {
+func deleteOneTask(task string) {
+	id, _ := primitive.ObjectIDFromHex(task)
+
+	filter := bson.M{"id": id}
+
+	d, err := collection.DeleteOne(context.Background(), filter)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Deleted: ", d.DeletedCount)
 
 }
 
-func deleteOneTask() {
+func deleteAllTasks() int64 {
 
-}
+	d, err := collection.DeleteMany(context.Background(), bson.D{})
 
-func deleteAllTasks() {
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Deleted: ", d.DeletedCount)
+
+	return d.DeletedCount
 
 }
