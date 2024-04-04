@@ -11,6 +11,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -116,8 +118,31 @@ func DeleteAllTasks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(count)
 }
 
-func getAllTasks() {
+func getAllTasks() []primitive.M {
+	curr, err := collection.Find(context.TODO(), bson.D{})
 
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var results []primitive.M
+
+	for curr.Next(context.Background()) {
+		var result bson.M
+		e := curr.Decode(&result)
+
+		if e != nil {
+			log.Fatal(e)
+		}
+
+		results = append(results, result)
+	}
+
+	if err := curr.Err(); err != nil {
+		log.Fatal(err)
+	}
+	curr.Close(context.Background())
+	return results
 }
 
 func taskComplete(task string) {
